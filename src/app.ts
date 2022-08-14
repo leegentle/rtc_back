@@ -1,39 +1,24 @@
-import express, { Request, Response, NextFunction } from "express";
+const express = require("express");
+const http = require("http");
+const socketIO = require("socket.io");
+
+// localhost 포트 설정
+const port = 4002;
 
 const app = express();
 
-const http = require("http").createServer(app);
-const io = require("socket.io")(http, {
-  cors: {
-    origin: ["*"],
-  },
-});
-const PORT = 3001;
+// server instance
+const server = http.createServer(app);
 
-app.get("/", (req: Request, res: Response, next: NextFunction) => {
-  res.send("welcome!");
-});
+// socketio 생성후 서버 인스턴스 사용
+const io = socketIO(server);
 
-io.on("connection", function (socket: any) {
-  console.log(socket.id, "Connected");
-
-  socket.emit("msg", `${socket.id} 연결 되었습니다.`);
-
-  socket.on("msg", function (data: any) {
-    console.log(socket.id, data);
-
-    socket.emit("msg", `Server : "${data}" 받았습니다.`);
+// socketio 문법
+io.on("connection", (socket: any) => {
+  console.log("User connected");
+  socket.on("disconnect", () => {
+    console.log("User disconnect");
   });
 });
 
-io.on("connect_error", (err: any) => {
-  console.log(`connect_error due to ${err.message}`);
-});
-
-app.listen(PORT, () => {
-  console.log(`
-  ################################################
-  🛡️  Server listening on port: ${PORT}🛡️
-  ################################################
-`);
-});
+server.listen(port, () => console.log(`Listening on port ${port}`));
